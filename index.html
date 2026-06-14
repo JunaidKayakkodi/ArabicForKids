@@ -30,9 +30,17 @@
         
         @keyframes bounce-small { 0%, 100% { transform: translateY(-10%); } 50% { transform: translateY(0); } }
         .animate-bounce-star { animation: bounce-small 1s infinite; }
+
+        /* Prevent text selection while drawing */
+        .no-select {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen w-full flex flex-col md:flex-row overflow-hidden">
+<body class="bg-slate-50 text-slate-800 h-screen w-full flex flex-col md:flex-row overflow-hidden no-select">
 
     <!-- SIDEBAR -->
     <div class="w-full md:w-72 bg-white shadow-lg z-20 flex flex-col h-[30%] md:h-full flex-shrink-0">
@@ -148,6 +156,7 @@ let currentLessonIdx = 0;
 let currentTab = 0; // 0: Meet, 1: Sounds, 2: Play
 let isDrawing = false;
 let canvasCtx = null;
+let currentAudio = null;
 
 // --- DOM ELEMENTS ---
 const sidebarList = document.getElementById('sidebar-list');
@@ -159,19 +168,60 @@ const scrollArea = document.getElementById('main-scroll-area');
 
 // --- AUDIO LOGIC ---
 function playSound(text, btnElement) {
+    // 1. Visual physical feedback on the button
     if(btnElement) {
         btnElement.classList.add('scale-95');
         setTimeout(() => btnElement.classList.remove('scale-95'), 150);
     }
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ar-SA'; 
-        utterance.rate = 0.8; 
-        utterance.pitch = 1.2; 
-        window.speechSynthesis.speak(utterance);
+
+    // Stop any currently playing audio
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+    window.speechSynthesis.cancel();
+
+    // 2. Fallback Speech Synthesis Engine
+    const speakText = () => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Try to find an Arabic voice specifically
+            const voices = window.speechSynthesis.getVoices();
+            const arabicVoice = voices.find(voice => voice.lang.includes('ar'));
+            if (arabicVoice) utterance.voice = arabicVoice;
+            
+            utterance.lang = 'ar-SA'; 
+            utterance.rate = 0.8; 
+            utterance.pitch = 1.2; 
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
+    // 3. Try to fetch real audio via an open API, fallback to speech synthesis if it fails
+    // We remove Harakat for the API search to get better matches
+    const searchWord = stripHarakat(text);
+    
+    // Using a free Google Translate TTS proxy endpoint for reliable audio
+    // (Note: In a production app, you would host your own MP3s)
+    try {
+        const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=ar&client=tw-ob`;
+        currentAudio = new Audio(audioUrl);
+        
+        currentAudio.play().catch(error => {
+            console.warn("Audio playback failed, falling back to Speech Synthesis:", error);
+            speakText(); // Fallback
+        });
+    } catch (e) {
+        console.warn("Audio request failed, falling back to Speech Synthesis");
+        speakText(); // Fallback
     }
 }
+
+// Ensure voices are loaded (required for some browsers)
+window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+};
 
 // --- RENDER FUNCTIONS ---
 
@@ -403,6 +453,7 @@ function handleWordClick(index, isCorrect, accentClass) {
         btn.disabled = true;
         btn.innerHTML += `<span class="absolute -top-3 -right-3 text-yellow-400 animate-bounce-star"><i data-lucide="star" class="w-8 h-8 fill-current"></i></span>`;
         lucide.createIcons();
+        playSound('صَحِيح', null); // Play "correct" in Arabic
     } else {
         btn.className = `relative text-2xl sm:text-4xl font-bold arabic-text p-4 sm:p-6 rounded-2xl shadow-sm border-2 transition-all duration-300 transform bg-gray-100 text-gray-400 border-gray-200 opacity-50`;
         btn.disabled = true;
@@ -451,13 +502,11 @@ function getCoords(e, canvas) {
     let clientX = e.touches ? e.touches[0].clientX : e.clientX;
     let clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
-    // Extremely robust coordinate mapping that accounts for any CSS stretching 
-    // or aspect ratio changes that happened after the canvas was initialized.
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
     return {
-        x: (clientX - rect.left) * scaleX / 2, // Divided by 2 because we did ctx.scale(2, 2)
+        x: (clientX - rect.left) * scaleX / 2,
         y: (clientY - rect.top) * scaleY / 2
     };
 }
