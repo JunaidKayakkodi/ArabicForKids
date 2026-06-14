@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arabic For Kids - Level 1</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Nunito', sans-serif; }
+        .arabic-text { font-family: 'Noto Kufi Arabic', sans-serif; }
+        
+        /* Custom scrollbar for sidebar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes bounce-small { 0%, 100% { transform: translateY(-10%); } 50% { transform: translateY(0); } }
+        .animate-bounce-star { animation: bounce-small 1s infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen w-full flex flex-col md:flex-row overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <div class="w-full md:w-72 bg-white shadow-lg z-20 flex flex-col h-[30%] md:h-full flex-shrink-0">
+        <div class="p-4 md:p-6 bg-indigo-600 text-white text-center flex-shrink-0">
+            <h1 class="text-xl md:text-2xl font-bold">Arabic For Kids</h1>
+            <p class="opacity-80 text-xs md:text-sm mt-1">Level 1 • All 28 Letters</p>
+        </div>
+        <div id="sidebar-list" class="flex-1 overflow-y-auto p-3 flex flex-row md:flex-col gap-2 md:gap-3 items-center md:items-stretch snap-x md:snap-none">
+            <!-- Sidebar buttons injected via JS -->
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col h-[70%] md:h-full overflow-hidden relative">
+        
+        <!-- Top Bar - Tabs -->
+        <div class="bg-white shadow-sm p-3 sticky top-0 z-10 flex-shrink-0">
+            <div class="max-w-3xl mx-auto flex justify-center gap-2 md:gap-6" id="tabs-container">
+                <!-- Tabs injected via JS -->
+            </div>
+        </div>
+
+        <!-- Content Body -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 w-full" id="main-scroll-area">
+            <div class="max-w-5xl mx-auto" id="content-body">
+                <!-- Main content injected via JS -->
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bg-white border-t p-3 md:p-4 flex justify-between items-center z-10 flex-shrink-0">
+            <button id="btn-prev" class="flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold transition-colors text-sm md:text-base bg-gray-100 text-gray-700 hover:bg-gray-200">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                <span class="hidden sm:inline">Previous Letter</span><span class="sm:hidden">Prev</span>
+            </button>
+            <button id="btn-next" class="flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold transition-colors text-sm md:text-base bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
+                <span class="hidden sm:inline">Next Letter</span><span class="sm:hidden">Next</span>
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+    </div>
+
+<script>
+// --- DATA ENGINE: ALL 28 LETTERS ---
+const RAW_DATA = [
+  { l: 'أ', t: 'Alif', an: ['أَسَد', 'Lion', '🦁'], ev: [['أَب', 'Father', '🧔‍♂️'], ['أُم', 'Mother', '🧕']], h: [['أَ','a','أَسَد','وَأَرْسَلَ'], ['إِ','i','إِبْرِيق','إِخْوَانًا'], ['أُ','u','أُم','أُكَلِّمَ']], n: "Alif is a straight line, tall and neat,\nStanding like a Lion on its feet! A-A-Asad!" },
+  { l: 'ب', t: 'Baa', an: ['بَيْت', 'House', '🏠'], ev: [['بَالُون', 'Balloon', '🎈'], ['بَاب', 'Door', '🚪']], h: [['بَ','ba','بَيْت','فَتَابَ'], ['بِ','bi','بِنْت','فَبِئْسَ'], ['بُ','bu','بُوم','بُرْهَانَ']], n: "Baa is a boat sailing on the sea,\nWith one little dot underneath for me! Ba-Ba-Bayt!" },
+  { l: 'ت', t: 'Taa', an: ['تَمْر', 'Dates', '🌴'], ev: [['تُفَّاحَة', 'Apple', '🍎'], ['تَاج', 'Crown', '👑']], h: [['تَ','ta','تَمْر','تَابُوا'], ['تِ','ti','تِمْسَاح','يَأَبَتِ'], ['تُ','tu','تُفَّاحَة','تُبْتُ']], n: "Taa is a bowl that is never late,\nHolding one, two, delicious dates! Ta-Ta-Tamr!" },
+  { l: 'ث', t: 'Thaa', an: ['ثَوْر', 'Bull', '🐂'], ev: [['ثَوْب', 'Garment', '👕'], ['ثَعْلَب', 'Fox', '🦊']], h: [['ثَ','tha','ثَوْر','وَثُلُثَ'], ['ثِ','thi','ثِيَاب','ثِيَابَهُمْ'], ['ثُ','thu','ثُعْبَان','ثُبُوت']], n: "Thaa has three dots, look and see!\nOne, two, three for you and me! Tha-Tha-Thawr!" },
+  { l: 'ج', t: 'Jeem', an: ['جَمَل', 'Camel', '🐪'], ev: [['جَبَل', 'Mountain', '⛰️'], ['جُبْن', 'Cheese', '🧀']], h: [['جَ','ja','جَمَل','جَعَلَ'], ['جِ','ji','جِدَار','جِبِلًا'], ['جُ','ju','جُبْن','جُنُود']], n: "Jeem is a camel, walking so slow,\nWith one dot in its tummy, look at it go!" },
+  { l: 'ح', t: 'Haa', an: ['حِصَان', 'Horse', '🐎'], ev: [['حَلِيب', 'Milk', '🥛'], ['حُوت', 'Whale', '🐳']], h: [['حَ','ha','حَلِيب','حَلِيم'], ['حِ','hi','حِصَان','حِجَاب'], ['حُ','hu','حُوت','حُوت']], n: "Haa is a horse, galloping fast,\nWith no dots at all, from first to last!" },
+  { l: 'خ', t: 'Khaa', an: ['خَرُوف', 'Sheep', '🐑'], ev: [['خُبْز', 'Bread', '🍞'], ['خِيَار', 'Cucumber', '🥒']], h: [['خَ','kha','خَرُوف','خَلَقَ'], ['خِ','khi','خِيَار','خِلَالَ'], ['خُ','khu','خُبْز','خُبْز']], n: "Khaa has a dot, sitting on its head!\nEating yummy Khubz, before going to bed!" },
+  { l: 'د', t: 'Daal', an: ['دِيك', 'Rooster', '🐓'], ev: [['دُب', 'Bear', '🐻'], ['دَرَّاجَة', 'Bicycle', '🚲']], h: [['دَ','da','دَرَّاجَة','دَخَلَ'], ['دِ','di','دِيك','دِين'], ['دُ','du','دُب','دُعَاء']], n: "Daal is a curve, easy to draw!\nThe cutest little Dubb, you ever saw!" },
+  { l: 'ذ', t: 'Thaal', an: ['ذُبَاب', 'Fly', '🪰'], ev: [['ذِئْب', 'Wolf', '🐺'], ['ذَهَب', 'Gold', '🪙']], h: [['ذَ','tha','ذَهَب','ذَهَبَ'], ['ذِ','thi','ذِئْب','ذِكْر'], ['ذُ','thu','ذُبَاب','ذُبَاب']], n: "Thaal has a dot, right on the top!\nFlying like a Thubab, that just won't stop!" },
+  { l: 'ر', t: 'Raa', an: ['رُمَّان', 'Pomegranate', '🍎'], ev: [['رِيشَة', 'Feather', '🪶'], ['رَجُل', 'Man', '👨']], h: [['رَ','ra','رَجُل','رَحْمَة'], ['رِ','ri','رِيشَة','رِزْق'], ['رُ','ru','رُمَّان','رُسُل']], n: "Raa is a slide, curving down low!\nRed sweet Rummaan, watch it grow!" },
+  { l: 'ز', t: 'Zaa', an: ['زَرَافَة', 'Giraffe', '🦒'], ev: [['زَهْرَة', 'Flower', '🌸'], ['زَيْتُون', 'Olive', '🫒']], h: [['زَ','za','زَرَافَة','زَكَاة'], ['زِ','zi','زِرّ','زِينَة'], ['زُ','zu','زُجَاج','زُجَاج']], n: "Zaa is a slide, but with a dot!\nA tall Zarafa, standing in the spot!" },
+  { l: 'س', t: 'Seen', an: ['سَمَكَة', 'Fish', '🐟'], ev: [['سَيَّارَة', 'Car', '🚗'], ['سَرِير', 'Bed', '🛏️']], h: [['سَ','sa','سَمَكَة','سَلَام'], ['سِ','si','سِرْوَال','سِرَاج'], ['سُ','su','سُلَحْفَاة','سُبْحَان']], n: "Seen has teeth, one, two, three!\nSwimming like a Samakah, in the deep blue sea!" },
+  { l: 'ش', t: 'Sheen', an: ['شَمْس', 'Sun', '☀️'], ev: [['شَجَرَة', 'Tree', '🌳'], ['شَمْعَة', 'Candle', '🕯️']], h: [['شَ','sha','شَمْس','شَمْس'], ['شِ','shi','شِرَاع','شِتَاء'], ['شُ','shu','شُعْلَة','شُعَيْب']], n: "Sheen has three dots, shining so bright!\nLike the warm Shams, giving us light!" },
+  { l: 'ص', t: 'Saad', an: ['صَقْر', 'Falcon', '🦅'], ev: [['صَابُون', 'Soap', '🧼'], ['صُنْدُوق', 'Box', '📦']], h: [['صَ','sa','صَقْر','صَبْر'], ['صِ','si','صِنَاعَة','صِرَاط'], ['صُ','su','صُنْدُوق','صُدُور']], n: "Saad is an oval, with a little cup!\nWashing with Saboon, to clean it all up!" },
+  { l: 'ض', t: 'Daad', an: ['ضِفْدَع', 'Frog', '🐸'], ev: [['ضِرْس', 'Tooth', '🦷'], ['ضَابِط', 'Officer', '👮']], h: [['ضَ','da','ضَابِط','ضَرَبَ'], ['ضِ','di','ضِرْس','ضِيزَى'], ['ضُ','du','ضِفْدَع','ضُحَى']], n: "Daad is like Saad, but wears a dot hat!\nJumping like a Difda', imagine that!" },
+  { l: 'ط', t: 'Taa', an: ['طَائِرَة', 'Airplane', '✈️'], ev: [['طَمَاطِم', 'Tomato', '🍅'], ['طِفْل', 'Baby', '👶']], h: [['طَ','ta','طَائِرَة','طَعَام'], ['طِ','ti','طِفْل','طِين'], ['طُ','tu','طُيُور','طُيُور']], n: "Taa is an oval, with a tall stick!\nFlying in a Ta'irah, moving very quick!" },
+  { l: 'ظ', t: 'Zhaa', an: ['ظَرْف', 'Envelope', '✉️'], ev: [['ظِلّ', 'Shadow', '👤'], ['ظَبْي', 'Antelope', '🦌']], h: [['ظَ','zha','ظَبْي','ظَلَمَ'], ['ظِ','zhi','ظِلّ','ظِلّ'], ['ظُ','zhu','ظُفْر','ظُلُمَات']], n: "Zhaa is like Taa, with a dot to show!\nSending a Zharf, to a friend I know!" },
+  { l: 'ع', t: 'Ayn', an: ['عَيْن', 'Eye', '👁️'], ev: [['عُصْفُور', 'Bird', '🐦'], ['عِنَب', 'Grapes', '🍇']], h: [['عَ','a','عَيْن','عَلِيم'], ['عِ','i','عِنَب','عِنْدَ'], ['عُ','u','عُصْفُور','عُقْدَة']], n: "Ayn is a semi-circle, with a big belly below!\nSeeing with my Ayn, everywhere I go!" },
+  { l: 'غ', t: 'Ghayn', an: ['غَزَال', 'Deer', '🦌'], ev: [['غَسَّالَة', 'Washing Machine', '🧺'], ['غُرَاب', 'Crow', '🐦‍⬛']], h: [['غَ','gha','غَزَال','غَفُور'], ['غِ','ghi','غِرْبَان','غِشَاوَة'], ['غُ','ghu','غُرَاب','غُرَف']], n: "Ghayn has a dot, sitting up high!\nLike a fast Ghazal, running right by!" },
+  { l: 'ف', t: 'Faa', an: ['فِيل', 'Elephant', '🐘'], ev: [['فَرَاشَة', 'Butterfly', '🦋'], ['فَم', 'Mouth', '👄']], h: [['فَ','fa','فَرَاشَة','فَلَق'], ['فِ','fi','فِيل','فِرْعَوْن'], ['فُ','fu','فُرْشَاة','فُرَات']], n: "Faa has a circle, and one single dot!\nA big grey Feel, eating a lot!" },
+  { l: 'ق', t: 'Qaaf', an: ['قِرْد', 'Monkey', '🐒'], ev: [['قَمَر', 'Moon', '🌙'], ['قِطَار', 'Train', '🚂']], h: [['قَ','qa','قَمَر','قَلَم'], ['قِ','qi','قِرْد','قِبْلَة'], ['قُ','qu','قُبَّة','قُرْآن']], n: "Qaaf goes deep, with dots one and two!\nA silly little Qird, swinging at the zoo!" },
+  { l: 'ك', t: 'Kaaf', an: ['كَلْب', 'Dog', '🐕'], ev: [['كِتَاب', 'Book', '📖'], ['كُرَة', 'Ball', '⚽']], h: [['كَ','ka','كَلْب','كَوْثَر'], ['كِ','ki','كِتَاب','كِتَاب'], ['كُ','ku','كُرَة','كُتِبَ']], n: "Kaaf has a small shape, resting inside!\nReading a Kitab, with pages so wide!" },
+  { l: 'ل', t: 'Laam', an: ['لَيْمُون', 'Lemon', '🍋'], ev: [['لَحْم', 'Meat', '🥩'], ['لِسَان', 'Tongue', '👅']], h: [['لَ','la','لَيْمُون','لَيْل'], ['لِ','li','لِسَان','لِبَاس'], ['لُ','lu','لُؤْلُؤ','لُؤْلُؤ']], n: "Laam is a hook, reaching so long!\nTasting sour Laymoon, singing a song!" },
+  { l: 'م', t: 'Meem', an: ['مَوْز', 'Banana', '🍌'], ev: [['مَسْجِد', 'Mosque', '🕌'], ['مِفْتَاح', 'Key', '🔑']], h: [['مَ','ma','مَوْز','مَسَد'], ['مِ','mi','مِفْتَاح','مِصْر'], ['مُ','mu','مُصْحَف','مُحَمَّد']], n: "Meem has a circle, and a tail dropping down!\nEating yellow Mawz, the best in town!" },
+  { l: 'ن', t: 'Noon', an: ['نَمِر', 'Tiger', '🐅'], ev: [['نَجْم', 'Star', '⭐'], ['نَحْلَة', 'Bee', '🐝']], h: [['نَ','na','نَجْم','نَار'], ['نِ','ni','نِصْف','نِسَاء'], ['نُ','nu','نُور','نُور']], n: "Noon is a bowl, with a dot in the middle!\nA striped fierce Namir, solving a riddle!" },
+  { l: 'ه', t: 'Haa', an: ['هُدْهُد', 'Hoopoe', '🐦'], ev: [['هِلَال', 'Crescent', '🌙'], ['هَدِيَّة', 'Gift', '🎁']], h: [['هَ','ha','هَدِيَّة','هَذَا'], ['هِ','hi','هِلَال','هِدَايَة'], ['هُ','hu','هُدْهُد','هُدًى']], n: "Haa has two loops, tied in a bow!\nA flying little Hudhud, putting on a show!" },
+  { l: 'و', t: 'Waw', an: ['وَرْدَة', 'Flower', '🌹'], ev: [['وَرَقَة', 'Leaf', '🍃'], ['وَجْه', 'Face', '👦']], h: [['وَ','wa','وَرْدَة','وَقْت'], ['وِ','wi','وِسَادَة','وِجْهَة'], ['وُ','wu','وُجُوه','وُجُوه']], n: "Waw is a circle, curving down to the floor!\nA beautiful Wardah, growing by the door!" },
+  { l: 'ي', t: 'Yaa', an: ['يَد', 'Hand', '✋'], ev: [['يَوْم', 'Day', '☀️'], ['يُوسُفِي', 'Tangerine', '🍊']], h: [['يَ','ya','يَد','يَوْم'], ['يِ','yi','يِنْبُوع','قِيلَ'], ['يُ','yu','يُوسُفِي','يُوسُف']], n: "Yaa is like a duck, with two dots below!\nWaving with my Yad, saying hello!" }
+];
+
+const COLORS = [
+  { color: 'bg-red-100', accent: 'bg-red-500', textAccent: 'text-red-500', borderAccent: 'border-red-500' },
+  { color: 'bg-blue-100', accent: 'bg-blue-500', textAccent: 'text-blue-500', borderAccent: 'border-blue-500' },
+  { color: 'bg-green-100', accent: 'bg-green-500', textAccent: 'text-green-500', borderAccent: 'border-green-500' },
+  { color: 'bg-yellow-100', accent: 'bg-yellow-500', textAccent: 'text-yellow-600', borderAccent: 'border-yellow-500' },
+  { color: 'bg-purple-100', accent: 'bg-purple-500', textAccent: 'text-purple-500', borderAccent: 'border-purple-500' },
+  { color: 'bg-pink-100', accent: 'bg-pink-500', textAccent: 'text-pink-500', borderAccent: 'border-pink-500' },
+  { color: 'bg-indigo-100', accent: 'bg-indigo-500', textAccent: 'text-indigo-500', borderAccent: 'border-indigo-500' },
+  { color: 'bg-teal-100', accent: 'bg-teal-500', textAccent: 'text-teal-500', borderAccent: 'border-teal-500' },
+  { color: 'bg-orange-100', accent: 'bg-orange-500', textAccent: 'text-orange-500', borderAccent: 'border-orange-500' }
+];
+
+const stripHarakat = (str) => str.replace(/[\u064B-\u065F]/g, '');
+const ALL_WORDS = RAW_DATA.flatMap(d => [d.an[0], d.ev[0][0], d.ev[1][0]]);
+
+const LESSONS = RAW_DATA.map((d, index) => {
+  const c = COLORS[index % COLORS.length];
+  return {
+    id: index + 1,
+    letter: d.l,
+    title: d.t,
+    ...c,
+    animal: { word: d.an[0], english: d.an[1], icon: d.an[2] },
+    everyday: [
+      { word: d.ev[0][0], english: d.ev[0][1], icon: d.ev[0][2] },
+      { word: d.ev[1][0], english: d.ev[1][1], icon: d.ev[1][2] }
+    ],
+    harakat: d.h.map(hItem => ({
+      sound: hItem[0], label: hItem[1], example: hItem[2], quran: hItem[3]
+    })),
+    nasheed: d.n
+  };
+});
+
+// --- STATE ---
+let currentLessonIdx = 0;
+let currentTab = 0; // 0: Meet, 1: Sounds, 2: Play
+let isDrawing = false;
+let canvasCtx = null;
+
+// --- DOM ELEMENTS ---
+const sidebarList = document.getElementById('sidebar-list');
+const tabsContainer = document.getElementById('tabs-container');
+const contentBody = document.getElementById('content-body');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const scrollArea = document.getElementById('main-scroll-area');
+
+// --- AUDIO LOGIC ---
+function playSound(text, btnElement) {
+    if(btnElement) {
+        btnElement.classList.add('scale-95');
+        setTimeout(() => btnElement.classList.remove('scale-95'), 150);
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ar-SA'; 
+        utterance.rate = 0.8; 
+        utterance.pitch = 1.2; 
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+// --- RENDER FUNCTIONS ---
+
+function renderSidebar() {
+    sidebarList.innerHTML = LESSONS.map((l, idx) => `
+        <button onclick="changeLesson(${idx})" id="sidebar-btn-${idx}"
+            class="snap-center flex-none w-48 md:w-auto flex items-center justify-between p-3 rounded-xl border-2 transition-all 
+            ${currentLessonIdx === idx 
+                ? `active-lesson ${l.borderAccent} ${l.color} shadow-md scale-100 md:scale-105 ml-0 md:ml-2` 
+                : 'border-transparent hover:bg-gray-50'}">
+            <div class="flex flex-col items-start text-left">
+                <span class="text-xs font-medium text-gray-500">Lesson ${l.id}</span>
+                <span class="text-lg font-bold">${l.title}</span>
+            </div>
+            <span class="text-3xl font-bold arabic-text ${currentLessonIdx === idx ? l.textAccent : 'text-gray-300'}" dir="rtl">
+                ${l.letter}
+            </span>
+        </button>
+    `).join('');
+    
+    setTimeout(() => {
+        const activeBtn = document.querySelector('.active-lesson');
+        if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, 50);
+}
+
+function renderTabs() {
+    const tabs = [
+        { label: 'Meet It', icon: 'book-open' },
+        { label: 'Sounds', icon: 'play-circle' },
+        { label: 'Play!', icon: 'mouse-pointer-2' }
+    ];
+    const lesson = LESSONS[currentLessonIdx];
+    
+    tabsContainer.innerHTML = tabs.map((tab, idx) => `
+        <button onclick="changeTab(${idx})"
+            class="flex flex-col items-center p-2 md:px-6 md:py-3 rounded-2xl transition-all flex-1 md:flex-none 
+            ${currentTab === idx ? `${lesson.color} ${lesson.textAccent} shadow-inner` : 'text-gray-500 hover:bg-gray-100'}">
+            <i data-lucide="${tab.icon}" class="w-5 h-5 mb-1"></i>
+            <span class="text-xs md:text-sm font-bold">${idx + 1}. ${tab.label}</span>
+        </button>
+    `).join('');
+    
+    lucide.createIcons();
+}
+
+function renderMainContent() {
+    const lesson = LESSONS[currentLessonIdx];
+    let html = '';
+
+    if (currentTab === 0) {
+        // TAB 0: MEET IT
+        html = `
+            <div class="animate-fade-in flex flex-col items-center">
+                <div class="w-full flex justify-between items-center mb-6">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Meet the Letter!</h2>
+                    <div class="hidden md:block px-4 py-2 rounded-full ${lesson.color} ${lesson.textAccent} font-bold text-sm animate-pulse">
+                        Teacher Prompt: "Listen & Repeat!"
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full mb-10">
+                    <div class="w-48 h-48 md:w-64 md:h-64 flex items-center justify-center rounded-full shadow-xl border-8 border-white ${lesson.color} flex-shrink-0">
+                        <span class="text-[100px] md:text-[150px] font-bold arabic-text ${lesson.textAccent}" dir="rtl">${lesson.letter}</span>
+                    </div>
+                    
+                    <div class="bg-white p-6 md:p-8 rounded-3xl shadow-lg border-2 border-gray-100 text-center w-full md:w-auto min-w-[280px]">
+                        <div class="text-6xl md:text-8xl mb-4">${lesson.animal.icon}</div>
+                        <div class="text-5xl md:text-6xl font-bold mb-2 arabic-text ${lesson.textAccent}" dir="rtl">${lesson.animal.word}</div>
+                        <div class="text-xl md:text-2xl font-medium text-gray-500 uppercase tracking-widest">${lesson.animal.english}</div>
+                        <!-- PLAY SOUND BUTTON -->
+                        <button onclick="playSound('${lesson.animal.word}', this)" class="mt-6 mx-auto flex items-center justify-center w-14 h-14 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-transform hover:scale-110">
+                            <i data-lucide="volume-2" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-full">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-400 mb-4 text-center uppercase tracking-wider">More Words</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        ${lesson.everyday.map(item => `
+                            <div class="bg-white px-6 py-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                                <div class="text-4xl md:text-5xl">${item.icon}</div>
+                                <div class="text-right">
+                                    <div class="text-3xl md:text-4xl font-bold text-gray-800 arabic-text" dir="rtl">${item.word}</div>
+                                    <div class="text-sm md:text-base text-gray-400 font-medium mt-1">${item.english}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (currentTab === 1) {
+        // TAB 1: SOUNDS
+        html = `
+            <div class="animate-fade-in flex flex-col items-center w-full">
+                <div class="w-full flex justify-between items-center mb-6">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Learn the Sounds</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full mb-8">
+                    ${lesson.harakat.map(h => `
+                        <div class="bg-white rounded-3xl shadow-lg overflow-hidden border-t-8 ${lesson.borderAccent}">
+                            <div class="py-6 md:py-8 text-center ${lesson.color}">
+                                <span class="text-7xl md:text-8xl font-bold arabic-text ${lesson.textAccent}" dir="rtl">${h.sound}</span>
+                            </div>
+                            <div class="p-5 text-center">
+                                <div class="text-lg md:text-xl font-bold text-gray-600 mb-2">${h.label}</div>
+                                <div class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 arabic-text" dir="rtl">${h.example}</div>
+                                <!-- PLAY SOUND BUTTON -->
+                                <button onclick="playSound('${h.sound}', this)" class="w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-transform active:scale-95 ${lesson.accent}">
+                                    <i data-lucide="volume-2" class="w-5 h-5"></i> Listen
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="w-full bg-slate-800 text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <i data-lucide="book-open" class="w-[100px] h-[100px]"></i>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-bold mb-6 flex items-center gap-3 relative z-10">
+                        <i data-lucide="star" class="w-6 h-6 text-yellow-400"></i> 
+                        Quran Connection (نَكْتَشِفُ مِنَ الْقُرْآن)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                        ${lesson.harakat.map(h => `
+                            <div class="bg-slate-700/80 backdrop-blur-sm p-4 md:p-6 rounded-2xl border border-slate-600 flex flex-row md:flex-col items-center justify-between md:justify-center text-center gap-4">
+                                <div class="text-3xl md:text-4xl font-bold text-yellow-400 arabic-text" dir="rtl">${h.sound}</div>
+                                <div class="text-2xl md:text-3xl font-bold text-white arabic-text" dir="rtl">${h.quran}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (currentTab === 2) {
+        // TAB 2: PLAY
+        html = `
+            <div class="animate-fade-in flex flex-col items-center w-full gap-8 md:gap-12 pb-8">
+                
+                <div class="w-full bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-gray-100 text-center">
+                    <div class="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-xs md:text-sm mb-4 md:mb-6">
+                        <span class="animate-bounce">✏️</span> Teacher Prompt: "Trace the letter carefully!"
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6">Draw the Letter</h2>
+                    
+                    <div class="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
+                        <div class="relative w-full aspect-square bg-white rounded-3xl shadow-inner border-4 border-dashed border-gray-300 overflow-hidden touch-none">
+                            <div class="absolute inset-0 flex items-center justify-center text-[200px] sm:text-[250px] font-bold text-gray-100 select-none pointer-events-none arabic-text" dir="rtl">
+                                ${lesson.letter}
+                            </div>
+                            <canvas id="drawing-canvas" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
+                        </div>
+                        <button onclick="clearCanvas()" class="flex items-center gap-2 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-full transition-colors">
+                            <i data-lucide="eraser" class="w-5 h-5"></i> Clear & Try Again
+                        </button>
+                    </div>
+                </div>
+
+                <div class="${lesson.color} w-full p-6 md:p-8 rounded-3xl shadow-lg text-center">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Hide and Seek! 🔍</h2>
+                    <p class="text-sm md:text-base text-gray-600 font-medium mb-6">Can you find the words that have the letter <strong class="text-xl md:text-2xl arabic-text">${lesson.letter}</strong> in them?</p>
+                    <div id="hide-and-seek-container" class="flex flex-wrap justify-center gap-4 p-4">
+                        <!-- Game injected here -->
+                    </div>
+                </div>
+
+                <div class="w-full bg-yellow-50 p-6 md:p-8 rounded-3xl border-2 border-yellow-200 text-center shadow-sm">
+                    <h2 class="text-xl md:text-2xl font-bold text-yellow-700 mb-3 flex items-center justify-center gap-2">
+                        🎵 Sing Along!
+                    </h2>
+                    <p class="text-lg md:text-xl text-gray-700 font-medium leading-loose whitespace-pre-line">${lesson.nasheed}</p>
+                </div>
+
+            </div>
+        `;
+    }
+
+    contentBody.innerHTML = html;
+    lucide.createIcons();
+
+    if (currentTab === 2) {
+        initCanvas();
+        initHideAndSeekGame();
+    }
+}
+
+// --- LOGIC: HIDEN AND SEEK ---
+function initHideAndSeekGame() {
+    const lesson = LESSONS[currentLessonIdx];
+    const container = document.getElementById('hide-and-seek-container');
+    
+    // Logic to select words
+    const correctWords = [lesson.animal.word, lesson.everyday[0].word];
+    const wrongWords = [];
+    
+    while(wrongWords.length < 3) {
+      const randomWord = ALL_WORDS[Math.floor(Math.random() * ALL_WORDS.length)];
+      if (!stripHarakat(randomWord).includes(stripHarakat(lesson.letter)) && !wrongWords.includes(randomWord)) {
+        wrongWords.push(randomWord);
+      }
+    }
+    
+    const gameWords = [
+      ...correctWords.map(w => ({ word: w, hasLetter: true })), 
+      ...wrongWords.map(w => ({ word: w, hasLetter: false }))
+    ].sort(() => Math.random() - 0.5);
+
+    container.innerHTML = gameWords.map((item, index) => `
+        <button id="hs-btn-${index}" data-correct="${item.hasLetter}" onclick="handleWordClick(${index}, ${item.hasLetter}, '${lesson.accent}')"
+            class="relative text-2xl sm:text-4xl font-bold arabic-text p-4 sm:p-6 rounded-2xl shadow-sm border-2 transition-all duration-300 transform bg-white text-gray-800 hover:bg-gray-50 border-gray-200" dir="rtl">
+            ${item.word}
+        </button>
+    `).join('');
+}
+
+function handleWordClick(index, isCorrect, accentClass) {
+    const btn = document.getElementById(`hs-btn-${index}`);
+    if (btn.disabled) return;
+    
+    if (isCorrect) {
+        btn.className = `relative text-2xl sm:text-4xl font-bold arabic-text p-4 sm:p-6 rounded-2xl shadow-sm border-2 transition-all duration-300 transform ${accentClass} text-white border-transparent scale-110`;
+        btn.disabled = true;
+        btn.innerHTML += `<span class="absolute -top-3 -right-3 text-yellow-400 animate-bounce-star"><i data-lucide="star" class="w-8 h-8 fill-current"></i></span>`;
+        lucide.createIcons();
+    } else {
+        btn.className = `relative text-2xl sm:text-4xl font-bold arabic-text p-4 sm:p-6 rounded-2xl shadow-sm border-2 transition-all duration-300 transform bg-gray-100 text-gray-400 border-gray-200 opacity-50`;
+        btn.disabled = true;
+    }
+}
+
+// --- LOGIC: CANVAS ---
+function initCanvas() {
+    const canvas = document.getElementById('drawing-canvas');
+    if (!canvas) return;
+    
+    canvasCtx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    canvasCtx.scale(2, 2);
+    canvasCtx.lineCap = 'round';
+    canvasCtx.lineJoin = 'round';
+    canvasCtx.lineWidth = 16;
+    canvasCtx.strokeStyle = '#4F46E5'; 
+
+    // Bind events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    
+    canvas.addEventListener('touchstart', startDrawing, {passive: false});
+    canvas.addEventListener('touchmove', draw, {passive: false});
+    canvas.addEventListener('touchend', stopDrawing);
+}
+
+function clearCanvas() {
+    const canvas = document.getElementById('drawing-canvas');
+    if(canvas && canvasCtx) {
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+function getCoords(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: clientX - rect.left,
+        y: clientY - rect.top  // BUG FIXED HERE
+    };
+}
+
+function startDrawing(e) {
+    if(e.type === 'touchstart') e.preventDefault();
+    isDrawing = true;
+    const canvas = document.getElementById('drawing-canvas');
+    const coords = getCoords(e, canvas);
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(coords.x, coords.y);
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault(); 
+    const canvas = document.getElementById('drawing-canvas');
+    const coords = getCoords(e, canvas);
+    canvasCtx.lineTo(coords.x, coords.y);
+    canvasCtx.stroke();
+}
+
+function stopDrawing() {
+    isDrawing = false;
+}
+
+// --- NAVIGATION ---
+function changeLesson(idx) {
+    currentLessonIdx = idx;
+    currentTab = 0;
+    scrollArea.scrollTop = 0;
+    updateAll();
+}
+
+function changeTab(idx) {
+    currentTab = idx;
+    scrollArea.scrollTop = 0;
+    updateAll();
+}
+
+function updateButtons() {
+    btnPrev.disabled = currentLessonIdx === 0;
+    btnNext.disabled = currentLessonIdx === LESSONS.length - 1;
+    
+    if(btnPrev.disabled) btnPrev.className = "flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold transition-colors text-sm md:text-base opacity-50 cursor-not-allowed bg-gray-100 text-gray-400";
+    else btnPrev.className = "flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold transition-colors text-sm md:text-base bg-gray-100 text-gray-700 hover:bg-gray-200";
+
+    if(btnNext.disabled) btnNext.className = "flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold transition-colors text-sm md:text-base opacity-50 cursor-not-allowed bg-gray-100 text-gray-400";
+    else btnNext.className = "flex items-center gap-1 md:gap-2 px-4 py-2 md:px-6 md:py-3 rounded-full font-bold transition-colors text-sm md:text-base bg-indigo-600 text-white hover:bg-indigo-700 shadow-md";
+}
+
+btnPrev.addEventListener('click', () => {
+    if (currentLessonIdx > 0) changeLesson(currentLessonIdx - 1);
+});
+
+btnNext.addEventListener('click', () => {
+    if (currentLessonIdx < LESSONS.length - 1) changeLesson(currentLessonIdx + 1);
+});
+
+// Resizing handling for canvas
+window.addEventListener('resize', () => {
+    if(currentTab === 2) initCanvas();
+});
+
+function updateAll() {
+    renderSidebar();
+    renderTabs();
+    renderMainContent();
+    updateButtons();
+}
+
+// --- INIT ---
+updateAll();
+
+</script>
+</body>
+</html>
