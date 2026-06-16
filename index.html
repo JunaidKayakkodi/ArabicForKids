@@ -487,12 +487,11 @@ function initDragAndDrop() {
     draggablesData = draggablesData.sort(() => Math.random() - 0.5);
 
     container.innerHTML = draggablesData.map(d => `
-        <div class="draggable w-16 h-16 md:w-20 md:h-20 bg-white shadow-md border-2 border-indigo-200 rounded-xl flex items-center justify-center text-4xl font-bold arabic-text text-indigo-600 hover:scale-110 hover:shadow-lg transition-transform z-20" 
+        <div class="draggable w-16 h-16 md:w-20 md:h-20 bg-white shadow-md border-2 border-indigo-200 rounded-xl flex items-center justify-center text-4xl md:text-5xl font-bold arabic-text text-indigo-600 hover:scale-110 hover:shadow-lg transition-transform z-20" 
              draggable="true" 
              data-idx="${d.idx}" 
              id="drag-${d.idx}">
-            <span class="absolute" style="top: ${d.idx === 1 ? '10px' : '-20px'}">${d.shape}</span>
-            <span class="text-gray-200 pointer-events-none" style="font-size: 0.5em;">◌</span>
+            <span class="pointer-events-none leading-none">&#x25CC;${d.shape}</span>
         </div>
     `).join('');
 
