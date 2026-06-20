@@ -280,7 +280,6 @@ function renderMainContent() {
     let html = '';
 
     if (currentTab === 0) {
-        // TAB 0: MEET IT
         html = `
             <div class="animate-fade-in flex flex-col items-center">
                 <div class="w-full flex justify-between items-center mb-6">
@@ -322,7 +321,6 @@ function renderMainContent() {
             </div>
         `;
     } else if (currentTab === 1) {
-        // TAB 1: SOUNDS
         html = `
             <div class="animate-fade-in flex flex-col items-center w-full">
                 <div class="w-full flex justify-between items-center mb-6">
@@ -366,7 +364,6 @@ function renderMainContent() {
             </div>
         `;
     } else if (currentTab === 2) {
-        // TAB 2: PLAY
         html = `
             <div class="animate-fade-in flex flex-col items-center w-full gap-8 md:gap-12 pb-8">
                 
@@ -432,7 +429,7 @@ function renderMainContent() {
                     <div id="draw-success-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-md z-10 hidden flex-col items-center justify-center rounded-3xl">
                         <i data-lucide="star" class="w-24 h-24 text-yellow-400 fill-yellow-400 animate-pop mb-4"></i>
                         <h2 class="text-4xl font-bold text-green-500 arabic-text">Mumtaz!</h2>
-                        <p class="text-gray-600 mt-2 font-bold text-xl">Perfect Drawing!</p>
+                        <p class="text-gray-600 mt-2 font-bold text-xl">Perfect Tracing!</p>
                         <button onclick="resetDrawing()" class="mt-8 px-8 py-3 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-colors shadow-md">
                             Draw Again
                         </button>
@@ -701,7 +698,7 @@ function handleHideSeekClick(index, isCorrect, accentClass) {
     }
 }
 
-// --- LOGIC: CANVAS STRICT VALIDATION ---
+// --- LOGIC: CANVAS SMART GRID VALIDATION ---
 function initCanvas() {
     const canvas = document.getElementById('drawing-canvas');
     const targetCanvas = document.getElementById('target-canvas');
@@ -719,7 +716,7 @@ function initCanvas() {
     canvasCtx.scale(2, 2);
     canvasCtx.lineCap = 'round';
     canvasCtx.lineJoin = 'round';
-    canvasCtx.lineWidth = 16;
+    canvasCtx.lineWidth = 24; 
     canvasCtx.strokeStyle = '#4F46E5'; 
 
     targetCtx.scale(2, 2);
@@ -802,40 +799,44 @@ function checkDrawingStrict() {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    // PASS 1: FAT HITBOX FOR PRECISION
+    // 1. FAT HITBOX (Checks if they drew outside the lines)
     hiddenCtx.lineJoin = 'round';
-    hiddenCtx.lineWidth = 50; 
+    hiddenCtx.lineCap = 'round';
+    hiddenCtx.lineWidth = 70; // Extremely forgiving fat boundary
     hiddenCtx.strokeStyle = 'black';
     hiddenCtx.strokeText(LESSONS[currentLessonIdx].letter, centerX, centerY + (fontSize * 0.1));
     hiddenCtx.fillStyle = 'black';
     hiddenCtx.fillText(LESSONS[currentLessonIdx].letter, centerX, centerY + (fontSize * 0.1));
     const fatData = hiddenCtx.getImageData(0, 0, width, height).data;
 
-    // PASS 2: THIN SKELETON FOR COVERAGE
+    // 2. NORMAL HITBOX (Used to map out the required grid path)
     hiddenCtx.clearRect(0, 0, width, height);
-    hiddenCtx.lineWidth = 2; 
-    hiddenCtx.strokeText(LESSONS[currentLessonIdx].letter, centerX, centerY + (fontSize * 0.1));
     hiddenCtx.fillText(LESSONS[currentLessonIdx].letter, centerX, centerY + (fontSize * 0.1));
-    const thinData = hiddenCtx.getImageData(0, 0, width, height).data;
+    const normalData = hiddenCtx.getImageData(0, 0, width, height).data;
 
     let userPixels = 0;
     let userInsideFat = 0;
-    let thinPixels = 0;
-    let thinCoveredByUser = 0;
+    
+    // Smart Grid System (25px blocks) perfectly verifies path tracking
+    const CELL_SIZE = 25; 
+    const targetZones = new Set();
+    const userZones = new Set();
 
-    for (let i = 3; i < userData.length; i += 4) {
-        const hasUser = userData[i] > 10;
-        const hasFat = fatData[i] > 10;
-        const hasThin = thinData[i] > 10;
-        
-        if (hasUser) {
-            userPixels++;
-            if (hasFat) userInsideFat++;
-        }
-        
-        if (hasThin) {
-            thinPixels++;
-            if (hasUser) thinCoveredByUser++;
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4 + 3;
+            const hasUser = userData[i] > 10;
+            const hasTarget = normalData[i] > 10;
+            
+            if (hasUser) {
+                userPixels++;
+                if (fatData[i] > 10) userInsideFat++;
+                userZones.add(Math.floor(x / CELL_SIZE) + ',' + Math.floor(y / CELL_SIZE));
+            }
+            
+            if (hasTarget) {
+                targetZones.add(Math.floor(x / CELL_SIZE) + ',' + Math.floor(y / CELL_SIZE));
+            }
         }
     }
 
@@ -844,14 +845,24 @@ function checkDrawingStrict() {
         return;
     }
 
-    const precision = userInsideFat / userPixels; 
-    const coverage = thinCoveredByUser / thinPixels; 
+    // Mathematical calculations
+    const precision = userInsideFat / userPixels;
     
-    if (coverage < 0.65) {
-        showDrawingError("You missed a part! Did you get all the dots and shapes?");
-    } else if (precision < 0.50) {
-        showDrawingError("Too messy! Try to stay closer to the gray marks.");
+    let hitZones = 0;
+    targetZones.forEach(z => {
+        if (userZones.has(z)) hitZones++;
+    });
+    const coverage = hitZones / targetZones.size;
+
+    // Smart Validation Rules
+    if (coverage < 0.78) { 
+        // A single pen stroke easily hits 85-95% of the zones. If it's under 78%, they definitely skipped a dot!
+        showDrawingError("You missed a part! Make sure to trace the whole shape and dots.");
+    } else if (precision < 0.40) { 
+        // Highly forgiving of loops overlapping, but rejects massive screen scribbling
+        showDrawingError("A bit messy! Try to stay on the gray marks.");
     } else {
+        // Passed both tests!
         const overlay = document.getElementById('draw-success-overlay');
         if (overlay) {
             overlay.classList.remove('hidden');
