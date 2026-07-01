@@ -14,6 +14,10 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .no-select { user-select: none; -webkit-user-select: none; }
         
+        /* Hide scrollbar for Tricky Letters Slider */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
         @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
         .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -34,7 +38,7 @@
 <body class="text-slate-800 h-screen w-full flex flex-col md:flex-row overflow-hidden no-select bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
 
     <!-- SIDEBAR -->
-    <div class="w-full md:w-80 bg-white shadow-xl z-20 flex flex-col h-[30%] md:h-full flex-shrink-0">
+    <div class="w-full md:w-80 bg-white shadow-xl z-20 flex flex-col h-[28%] md:h-full flex-shrink-0">
         <div class="p-4 md:p-6 bg-emerald-500 text-white text-center relative flex-shrink-0">
             <a href="index.html" class="absolute top-4 left-4 bg-white/20 p-2 rounded-lg hover:bg-white/40 transition-colors">
                 <i data-lucide="home" class="w-5 h-5"></i>
@@ -43,13 +47,13 @@
             <p class="opacity-80 text-xs md:text-sm mt-1">Level 2 • Reading Journey</p>
         </div>
         
-        <div id="sidebar-list" class="flex-1 overflow-y-auto p-3 flex flex-row md:flex-col gap-2 md:gap-3 items-center md:items-stretch snap-x md:snap-none">
+        <div id="sidebar-list" class="flex-1 overflow-y-auto p-2 flex flex-row md:flex-col gap-2 md:gap-3 items-center md:items-stretch snap-x md:snap-none">
             <!-- Sidebar injected here -->
         </div>
     </div>
 
     <!-- MAIN AREA -->
-    <div class="flex-1 flex flex-col h-[70%] md:h-full overflow-hidden relative">
+    <div class="flex-1 flex flex-col h-[72%] md:h-full overflow-hidden relative">
         <div class="bg-white/90 backdrop-blur-md shadow-sm p-2 md:p-3 sticky top-0 z-10 border-b border-gray-200">
             <div class="max-w-3xl mx-auto flex justify-center gap-2 md:gap-6" id="tabs-container"></div>
         </div>
@@ -88,8 +92,10 @@ const LESSONS = [
     {
         id: 3, mod: 1, type: 'tricky', title: 'Tricky Sounds', desc: 'Listen carefully!', color: 'bg-indigo-100', accent: 'bg-indigo-500', text: 'text-indigo-600', border: 'border-indigo-500',
         items: [ 
-            { pair: ['س', 'ص'], ans: 'ص', word: 'صَقْر', icon: '🦅' }, { pair: ['ت', 'ط'], ans: 'ط', word: 'طَائِرَة', icon: '✈️' }, 
-            { pair: ['ق', 'ك'], ans: 'ق', word: 'قَمَر', icon: '🌙' }, { pair: ['ذ', 'ز'], ans: 'ز', word: 'زَرَافَة', icon: '🦒' } 
+            { l1: 'س', w1: 'سَمَك', i1: '🐟', l2: 'ص', w2: 'صَقْر', i2: '🦅' },
+            { l1: 'ت', w1: 'تَمْر', i1: '🌴', l2: 'ط', w2: 'طَائِرَة', i2: '✈️' },
+            { l1: 'ك', w1: 'كَلْب', i1: '🐕', l2: 'ق', w2: 'قَمَر', i2: '🌙' },
+            { l1: 'ز', w1: 'زَرَافَة', i1: '🦒', l2: 'ذ', w2: 'ذُبَاب', i2: '🪰' }
         ]
     },
     {
@@ -247,11 +253,12 @@ function renderSidebar() {
         if (l.mod !== currentMod) {
             currentMod = l.mod;
             let modTitle = ['Foundations', 'Vocabulary', 'Sentences & Flow', 'Quran Rules', 'The Quran'][currentMod-1];
-            html += `<div class="w-full text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest mt-4 mb-2 pl-2">Module ${currentMod}: ${modTitle}</div>`;
+            // Hidden on mobile, block on tablet+ to avoid flex layout breaking
+            html += `<div class="hidden md:block w-full text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest mt-4 mb-2 pl-2">Module ${currentMod}: ${modTitle}</div>`;
         }
         html += `
-            <button onclick="changeLesson(${idx})" class="w-full flex flex-col items-start p-3 rounded-2xl border-2 transition-all ${currentLessonIdx === idx ? `active-lesson ${l.border} ${l.color} shadow-md` : 'border-transparent bg-white hover:bg-gray-50 mb-1'}">
-                <span class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Unit ${l.id}</span>
+            <button onclick="changeLesson(${idx})" class="snap-center flex-none w-44 md:w-auto flex flex-col items-start p-2.5 md:p-3 rounded-xl md:rounded-2xl border-2 transition-all ${currentLessonIdx === idx ? `active-lesson ${l.border} ${l.color} shadow-md` : 'border-transparent bg-white hover:bg-gray-50 mb-1'}">
+                <span class="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Unit ${l.id}</span>
                 <span class="text-sm md:text-base font-black text-gray-800 text-left leading-tight">${l.title}</span>
             </button>
         `;
@@ -311,13 +318,33 @@ function renderMainContent() {
                 l.items.map(i => `<button onclick="playSound('${i.sound}', this)" class="bg-white p-8 rounded-3xl shadow-md border-b-4 border-gray-200 hover:${l.border} transition-all active:scale-95"><span class="text-6xl font-black arabic-text">${i.char}</span></button>`).join('') + `</div></div>`;
         } else if (l.type === 'tricky') {
             html = `<div class="animate-fade-in text-center"><h2 class="text-3xl font-black mb-8">Tricky Sounds!</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">` + 
-                l.items.map(i => `<div class="bg-white p-8 rounded-3xl shadow-sm border-2 border-gray-100 flex flex-col items-center"><span class="text-6xl mb-4">${i.icon}</span><span class="text-4xl font-black arabic-text text-gray-800 mb-4">${i.word}</span><div class="flex gap-4"><span class="text-3xl font-bold arabic-text text-indigo-500">${i.pair[0]}</span><span class="text-3xl font-bold text-gray-300">vs</span><span class="text-3xl font-bold arabic-text text-indigo-500">${i.pair[1]}</span></div></div>`).join('') + `</div></div>`;
+                l.items.map(i => `
+                <div class="bg-white rounded-3xl shadow-sm border-2 border-gray-100 overflow-hidden relative group h-64">
+                    <div class="flex overflow-x-auto snap-x snap-mandatory scroll-smooth hide-scrollbar w-full h-full">
+                        <!-- Card 1 -->
+                        <div class="w-full flex-shrink-0 snap-center flex flex-col items-center justify-center bg-white cursor-pointer hover:bg-gray-50 transition-colors" onclick="playSound('${i.w1}', this)">
+                            <span class="text-6xl mb-2">${i.i1}</span>
+                            <span class="text-4xl font-black arabic-text text-gray-800 mb-2">${i.w1}</span>
+                            <span class="text-3xl font-bold arabic-text text-indigo-500">${i.l1}</span>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="w-full flex-shrink-0 snap-center flex flex-col items-center justify-center bg-indigo-50 cursor-pointer hover:bg-indigo-100 transition-colors" onclick="playSound('${i.w2}', this)">
+                            <span class="text-6xl mb-2">${i.i2}</span>
+                            <span class="text-4xl font-black arabic-text text-gray-800 mb-2">${i.w2}</span>
+                            <span class="text-3xl font-bold arabic-text text-indigo-500">${i.l2}</span>
+                        </div>
+                    </div>
+                    <!-- Swipe indicator -->
+                    <div class="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity">
+                        <span class="text-[10px] uppercase font-bold text-gray-500 bg-white/90 px-3 py-1 rounded-full shadow-sm">Slide ↔</span>
+                    </div>
+                </div>`).join('') + `</div></div>`;
         } else if (l.type === 'shaddah') {
             html = `<div class="animate-fade-in text-center"><h2 class="text-3xl font-black mb-8">What is Shaddah?</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">` + 
                 l.items.map(i => `<button onclick="playSound('${i.tts}', this)" class="bg-white p-6 rounded-3xl shadow-sm border-2 border-gray-100 flex flex-col items-center justify-center hover:scale-105 transition-all"><div class="text-4xl font-bold arabic-text text-gray-400 mb-2" dir="rtl">${i.parts[0]} + ${i.parts[1]} = </div><div class="text-7xl font-black arabic-text text-rose-600">${i.joined}</div></button>`).join('') + `</div></div>`;
         } else if (l.type === 'shapes') {
-            html = `<div class="animate-fade-in text-center"><h2 class="text-3xl font-black mb-8">How Letters Join</h2><div class="flex flex-col gap-4">` +
-                l.items.map(i => `<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center text-4xl font-bold arabic-text" dir="rtl"><span class="text-gray-400 w-16">${i.base}</span><span class="w-16">${i.beg}</span><span class="w-16">${i.mid}</span><span class="w-16">${i.end}</span></div>`).join('') + `</div></div>`;
+            html = `<div class="animate-fade-in text-center"><h2 class="text-3xl font-black mb-8">How Letters Join</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4">` +
+                l.items.map(i => `<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center text-3xl font-bold arabic-text" dir="rtl"><span class="text-gray-400 w-12">${i.base}</span><span class="w-12">${i.beg}</span><span class="w-12">${i.mid}</span><span class="w-12">${i.end}</span></div>`).join('') + `</div></div>`;
         } else if (l.type === 'words') {
             html = `<div class="animate-fade-in text-center"><h2 class="text-3xl font-black mb-8">Read the Words!</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6">` +
                 l.words.map(w => `<button onclick="playSound('${w.joined}', this)" class="bg-white p-6 rounded-3xl shadow-sm border-2 border-gray-100 flex flex-col items-center gap-4 hover:scale-105 transition-all"><span class="text-6xl">${w.icon}</span><span class="text-5xl font-black arabic-text ${l.text}">${w.joined}</span><span class="text-gray-400 font-bold uppercase">${w.eng}</span></button>`).join('') + `</div></div>`;
@@ -416,30 +443,39 @@ window.checkReview = (char, btn) => {
 
 // --- TRICKY SOUNDS GAME ---
 let currentTrickyIdx = 0;
+let currentTrickyTarget = {};
 function initTrickyGame() {
     const area = document.getElementById('tricky-game-area');
     if(!area) return;
     const l = LESSONS[currentLessonIdx];
     const item = l.items[currentTrickyIdx];
-    const options = [...item.pair].sort(() => Math.random() - 0.5);
+    
+    // Pick word 1 or word 2 randomly
+    const isFirst = Math.random() < 0.5;
+    currentTrickyTarget = {
+        ans: isFirst ? item.l1 : item.l2,
+        word: isFirst ? item.w1 : item.w2,
+        icon: isFirst ? item.i1 : item.i2
+    };
+    
+    const options = [item.l1, item.l2].sort(() => Math.random() - 0.5);
     
     area.innerHTML = `
-        <div class="text-7xl mb-6">${item.icon}</div>
-        <button onclick="playSound('${item.word}', this)" class="mx-auto bg-indigo-100 text-indigo-600 p-6 rounded-full hover:scale-110 transition-transform mb-12 shadow-sm"><i data-lucide="volume-2" class="w-10 h-10"></i></button>
+        <div class="text-7xl mb-6">${currentTrickyTarget.icon}</div>
+        <button onclick="playSound('${currentTrickyTarget.word}', this)" class="mx-auto bg-indigo-100 text-indigo-600 p-6 rounded-full hover:scale-110 transition-transform mb-12 shadow-sm"><i data-lucide="volume-2" class="w-10 h-10"></i></button>
         <div class="flex justify-center gap-6" id="tricky-opts">
             ${options.map(opt => `<button onclick="checkTricky('${opt}', this)" class="bg-gray-50 border-4 border-gray-200 w-24 h-24 rounded-3xl text-5xl font-black arabic-text text-gray-700 hover:border-indigo-400 transition-all">${opt}</button>`).join('')}
         </div>
         <div id="tricky-success" class="hidden absolute inset-0 bg-white/95 z-50 flex-col items-center justify-center rounded-[3rem]">
-            <h2 class="text-5xl font-black text-indigo-600 mb-6 arabic-text">${item.word}</h2>
+            <h2 class="text-5xl font-black text-indigo-600 mb-6 arabic-text">${currentTrickyTarget.word}</h2>
             <button onclick="nextTricky()" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg">Next Word</button>
         </div>
     `;
     lucide.createIcons();
-    setTimeout(() => {if(document.getElementById('tricky-game-area')) playSound(item.word, null);}, 500);
+    setTimeout(() => {if(document.getElementById('tricky-game-area')) playSound(currentTrickyTarget.word, null);}, 500);
 }
 window.checkTricky = (val, btn) => {
-    const ans = LESSONS[currentLessonIdx].items[currentTrickyIdx].ans;
-    if(val === ans) {
+    if(val === currentTrickyTarget.ans) {
         playSound('صَحِيح', null);
         btn.classList.replace('border-gray-200', 'border-green-500'); btn.classList.replace('text-gray-700', 'text-green-600');
         setTimeout(() => {
@@ -587,7 +623,7 @@ function initSentenceGame() {
         <div class="text-7xl mb-8">${s.icon}</div>
         <div class="flex justify-center flex-wrap gap-4 mb-12" dir="rtl" id="multi-dropzones">
             ${s.words.map((w, i) => `
-                <div class="dropzone h-16 md:h-20 min-w-[80px] md:min-w-[100px] px-4 md:px-6 border-4 border-dashed border-gray-300 rounded-2xl bg-gray-50 flex items-center justify-center relative" data-ans="${w}" data-filled="false">
+                <div class="dropzone h-20 min-w-[80px] md:min-w-[100px] px-4 md:px-6 border-4 border-dashed border-gray-300 rounded-2xl bg-gray-50 flex items-center justify-center relative" data-ans="${w}" data-filled="false">
                     <span class="text-xs text-gray-300 absolute -bottom-6">${i+1}</span>
                 </div>
             `).join('')}
@@ -704,10 +740,9 @@ function initXrayGame() {
 window.revealXray = (btn, secret) => {
     const target = btn.querySelector('.xray-target');
     if(target.innerText !== secret) {
-        playSound('صَحِيح', null);
         target.style.transform = 'scale(1.2)'; target.style.color = '#10B981'; 
         target.innerText = secret;
-        setTimeout(() => { playSound(secret, null); }, 500);
+        setTimeout(() => { playSound(secret, null); }, 200);
     }
 }
 
@@ -764,10 +799,20 @@ function initMatchGame() {
     const l = LESSONS[currentLessonIdx];
     let targets = []; let draggables = [];
     
+    // Safely map data depending on type to avoid undefined crashes
     if(l.type === 'review' || l.type === 'tricky') {
         const pool = [...l.items].sort(() => Math.random() - 0.5).slice(0, 4);
-        targets = pool.map(i => ({ tgt: (i.sound||i.word).toUpperCase(), val: (i.char||i.ans) }));
-        draggables = pool.map(i => ({ label: (i.char||i.ans), val: (i.char||i.ans) }));
+        if(l.type === 'tricky') {
+            const mixedTargets = pool.map(i => {
+                const useFirst = Math.random() < 0.5;
+                return useFirst ? { tgt: i.w1, val: i.l1 } : { tgt: i.w2, val: i.l2 };
+            });
+            targets = mixedTargets.map(i => ({ tgt: i.tgt, val: i.val, isBig: true }));
+            draggables = mixedTargets.map(i => ({ label: i.val, val: i.val }));
+        } else {
+            targets = pool.map(i => ({ tgt: (i.sound||i.word).toUpperCase(), val: (i.char||i.ans) }));
+            draggables = pool.map(i => ({ label: (i.char||i.ans), val: (i.char||i.ans) }));
+        }
     } else if (l.type === 'shaddah') {
         const pool = [...l.items].sort(() => Math.random() - 0.5).slice(0, 3);
         targets = pool.map(i => ({ tgt: `${i.parts[0]} + ${i.parts[1]}`, val: i.joined, isBig: true }));
